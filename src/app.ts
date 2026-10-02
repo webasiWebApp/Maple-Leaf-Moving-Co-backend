@@ -17,8 +17,26 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
 // CORS
+const allowedOrigins = [env.FRONTEND_URL];
+// Also allow www variant
+try {
+  const u = new URL(env.FRONTEND_URL);
+  if (!u.hostname.startsWith('www.')) {
+    allowedOrigins.push(`${u.protocol}//www.${u.hostname}${u.port ? ':' + u.port : ''}`);
+  }
+} catch { /* invalid URL — skip */ }
+
 app.use(cors({
-  origin: env.FRONTEND_URL,
+  origin: (origin, callback) => {
+    // Allow server-to-server requests (no origin) and listed origins
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin '${origin}' not allowed`));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Stripe-Signature'],
   optionsSuccessStatus: 200
 }));
 
