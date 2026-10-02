@@ -5,7 +5,15 @@ import { supabase } from '../lib/supabaseAdmin';
 import { sendCustomerConfirmation, sendOwnerAlert } from '../services/email';
 
 export const stripeWebhookRouter = Router();
-const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' as any });
+
+let _stripe: Stripe | null = null;
+const getStripe = (): Stripe => {
+  if (!_stripe) {
+    if (!env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is not configured');
+    _stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' as any });
+  }
+  return _stripe;
+};
 
 stripeWebhookRouter.post('/', async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'];
@@ -15,7 +23,7 @@ stripeWebhookRouter.post('/', async (req: Request, res: Response) => {
   try {
     if (!sig) throw new Error('No signature');
     // req.body is already raw buffer because we used express.raw in app.ts
-    event = stripe.webhooks.constructEvent(req.body, sig, env.STRIPE_WEBHOOK_SECRET);
+    event = getStripe().webhooks.constructEvent(req.body, sig, env.STRIPE_WEBHOOK_SECRET);
   } catch (err: any) {
     req.log.error(`Webhook Error: ${err.message}`);
     res.status(400).send(`Webhook Error: ${err.message}`);
