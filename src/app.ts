@@ -18,10 +18,14 @@ app.set('trust proxy', 1);
 
 // CORS
 const allowedOrigins = [env.FRONTEND_URL];
-// Also allow www variant
+// Also allow both www and non-www variants
 try {
   const u = new URL(env.FRONTEND_URL);
-  if (!u.hostname.startsWith('www.')) {
+  if (u.hostname.startsWith('www.')) {
+    // configured as www — add non-www
+    allowedOrigins.push(`${u.protocol}//${u.hostname.slice(4)}${u.port ? ':' + u.port : ''}`);
+  } else {
+    // configured as non-www — add www
     allowedOrigins.push(`${u.protocol}//www.${u.hostname}${u.port ? ':' + u.port : ''}`);
   }
 } catch { /* invalid URL — skip */ }
