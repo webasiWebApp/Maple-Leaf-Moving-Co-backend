@@ -7,7 +7,16 @@ import { calculateQuote } from '../services/pricing';
 import { supabase } from '../lib/supabaseAdmin';
 
 export const checkoutRouter = Router();
-const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+
+// Initialise lazily so a missing key doesn't crash the process at import time.
+let _stripe: Stripe | null = null;
+const getStripe = (): Stripe => {
+  if (!_stripe) {
+    if (!env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is not configured');
+    _stripe = new Stripe(env.STRIPE_SECRET_KEY);
+  }
+  return _stripe;
+};
 
 const instantCheckoutSchema = z.object({
   body: z.object({
@@ -125,7 +134,7 @@ checkoutRouter.post('/instant', validate(instantCheckoutSchema), async (req: Req
     }
 
     // 3. Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       ui_mode: 'hosted_page',
       mode: 'payment',
       currency: 'cad',

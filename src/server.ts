@@ -1,15 +1,15 @@
 import { app } from './app';
 import { env } from './config/env';
 
-const port = env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 8080;
 
-const server = app.listen(port, () => {
-  console.log(`🚀 Server is running on port ${port} in ${env.NODE_ENV} mode`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server is running on port ${PORT} in ${env.NODE_ENV} mode`);
 });
 
 // Handle graceful shutdown
 const shutdown = () => {
-  console.log('Shutting down server...');
+  console.log('Shutting down gracefully...');
   server.close(() => {
     console.log('Server closed.');
     process.exit(0);
