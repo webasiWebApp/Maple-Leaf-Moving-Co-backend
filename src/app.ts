@@ -63,6 +63,15 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Root check
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'Maple Leaf Moving Co. Backend is online!',
+    timestamp: new Date().toISOString() 
+  });
+});
+
 import { checkoutRouter } from './routes/checkout';
 import { contactRouter } from './routes/contact';
 import { mapsRouter } from './routes/maps';
